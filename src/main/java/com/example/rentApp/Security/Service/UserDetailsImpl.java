@@ -29,15 +29,15 @@ public class UserDetailsImpl implements UserDetails {
     public static UserDetailsImpl build(User user) {
         Set<Role> roleSet = new HashSet<>();
         roleSet.add(user.getRole());
-                List<GrantedAuthority> authorities =
-                        roleSet.stream().
-                        map(role -> new SimpleGrantedAuthority((role.getRoleName().name()))).
-                        collect(Collectors.toList());
+        List<GrantedAuthority> authorities = roleSet.stream().
+                map(role -> new SimpleGrantedAuthority(role.getRoleName())).collect(Collectors.toList());
+
         return new UserDetailsImpl(
                 user.getUserId(),
                 user.getUsername(),
                 user.getPassword(),
                 authorities);
+
     }
 
     @Override

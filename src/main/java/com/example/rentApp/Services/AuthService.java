@@ -38,6 +38,8 @@ public class AuthService {
     @Autowired
     JwtUtils jwtUtils;
 
+    String role;
+
     public ResponseEntity<?> registerUserService(User registerUser) {
         if (userRepository.existsByUsername(registerUser.getUsername())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Username already taken!"));
@@ -51,7 +53,6 @@ public class AuthService {
                 registerUser.getName(),
                 registerUser.getNic(),
                 registerUser.getDob(),
-                registerUser.getAge(),
                 registerUser.getEmail(),
                 registerUser.getMobileNo(),
                 registerUser.getDrivingLicenceId(),
@@ -85,7 +86,6 @@ public class AuthService {
                 }
             });
         }
-
         userRepository.save(user);
         return ResponseEntity.ok(new MessageResponse("User registered successfully"));
     }
@@ -101,15 +101,17 @@ public class AuthService {
         String jwt = jwtUtils.generateJwtToken((authentication));
         Date expiretime = jwtUtils.expirationTime();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
-        System.out.println("***************************************************");
+        for (String r : roles) {
+            this.role = r;
+        }
         return ResponseEntity.ok(new JwtResponse(jwt,
                 userDetails.getId(),
                 userDetails.getUsername(),
-                roles, expiretime));
+                this.role, expiretime));
     }
-
 }

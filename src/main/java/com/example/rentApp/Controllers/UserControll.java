@@ -5,27 +5,28 @@ import com.example.rentApp.Services.AuthService;
 import com.example.rentApp.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-@RequestMapping("/api/user")
+@RequestMapping("api/users")
 @RestController
 public class UserControll {
+
     @Autowired
     UserService userService;
 
-
-    @GetMapping("/all")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @RequestMapping(value = "/all")
     public List<User> getAllUsers() {
         return userService.allUsers();
     }
 
-    @GetMapping("/all/{userId}")
+    @RequestMapping(value = "/all/{userId}")
     public ResponseEntity<?> getAUser(@PathVariable Integer userId) {
-        return userService.aUser(userId);
+        return userService.getUserByUserId(userId);
     }
+
 }
