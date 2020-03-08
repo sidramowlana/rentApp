@@ -1,14 +1,19 @@
 package com.example.rentApp.Models;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int roleId;
+    private Integer roleId;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
@@ -17,22 +22,6 @@ public class Role {
     public Role() {}
 
     public Role(EnumRole roleName) {
-        this.roleName = roleName;
-    }
-
-    public Integer getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(Integer roleId) {
-        this.roleId = roleId;
-    }
-
-    public EnumRole getRoleName() {
-        return roleName;
-    }
-
-    public void setRoleName(EnumRole roleName) {
         this.roleName = roleName;
     }
 }

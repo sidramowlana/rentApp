@@ -11,6 +11,6 @@ import java.util.Optional;
 //@CrossOrigin(origins = "http://localhost:4200")
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Integer> {
-    Optional<Role> findByRoleName(EnumRole name);
+    Optional<Role> findByRoleName(String name);
 
 }

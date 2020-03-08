@@ -8,18 +8,17 @@ import com.example.rentApp.Repositories.UserRepository;
 import com.example.rentApp.Response.JwtResponse;
 import com.example.rentApp.Response.MessageResponse;
 import com.example.rentApp.Security.Service.UserDetailsImpl;
-import com.example.rentApp.Security.Service.UserDetailsServiceImpl;
-import com.example.rentApp.Security.jwt.JwtUtils;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import com.example.rentApp.Security.Service.UserDetailsServiceImpl;
+import com.example.rentApp.Security.jwt.JwtUtils;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -28,8 +27,6 @@ import java.util.stream.Collectors;
 @Service
 public class AuthService {
 
-    @Autowired
-    UserDetailsServiceImpl userDetailsService;
     @Autowired
     UserRepository userRepository;
     @Autowired
@@ -62,51 +59,57 @@ public class AuthService {
                 passwordEncoder.encode(registerUser.getPassword())
         );
 
-        Set<String> stringRoles = registerUser.getRole();
-        Set<Role> roles = new HashSet<>();
-
+        Set<String> stringRoles = registerUser.getRolesString();
+        List<Role> roles = roleRepository.findAll();
         if (stringRoles == null) {
-            Role userRole = roleRepository.findByRoleName(EnumRole.ROLE_USER)
+//            Role userRole = roleRepository.findByRoleName(EnumRole.ROLE_USER)
+            Role userRole = roleRepository.findByRoleName("ROLE_USER")
                     .orElseThrow(() -> new RuntimeException("Error: Role not found"));
-            roles.add(userRole);
-            user.setRoles(userRole);
+            user.setRole(userRole);
+            ;
         } else {
             stringRoles.forEach(role -> {
                 switch (role) {
                     case "admin":
-                        Role adminRole = roleRepository.findByRoleName(EnumRole.ROLE_OWNER)
+//                        Role adminRole = roleRepository.findByRoleName(EnumRole.ROLE_OWNER)
+                        Role adminRole = roleRepository.findByRoleName("ROLE_OWNER")
                                 .orElseThrow(() -> new RuntimeException("Error: Role not found"));
-                        user.setRoles(adminRole);
-                        roles.add(adminRole);
+                        user.setRole(adminRole);
                         break;
                     case "user":
-                        Role userRole = roleRepository.findByRoleName(EnumRole.ROLE_USER)
+//                        Role userRole = roleRepository.findByRoleName(EnumRole.ROLE_USER)
+                        Role userRole = roleRepository.findByRoleName("ROLE_USER")
                                 .orElseThrow(() -> new RuntimeException("Error: Role not found"));
-                        user.setRoles(userRole);
-                        roles.add(userRole);
+                        user.setRole(userRole);
                         break;
                 }
             });
         }
 
-        user.setRoleSet(roles);
-        Set<Role> r = user.getRoleSet();
-        for (Role role : r) {
-            System.out.println("roleis :" + role.getRoleName());
-        }
         userRepository.save(user);
         return ResponseEntity.ok(new MessageResponse("User registered successfully"));
     }
 
     public ResponseEntity<?> loginUserService(User loginUser) {
+        if (!userRepository.existsByUsername(loginUser.getUsername())) {
+            return ResponseEntity.ok("User name doesnt exist");
+        }
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginUser.getUsername(), loginUser.getPassword()));
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(loginUser.getUsername());
-        return ResponseEntity.ok("Work");
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken((authentication));
+        Date expiretime = jwtUtils.expirationTime();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
+
+        System.out.println("***************************************************");
+        return ResponseEntity.ok(new JwtResponse(jwt,
+                userDetails.getId(),
+                userDetails.getUsername(),
+                roles, expiretime));
     }
 
-    public List<User> allUsers() {
-        System.out.println(userRepository.findAll());
-        return userRepository.findAll();
-    }
 }
