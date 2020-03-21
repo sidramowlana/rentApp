@@ -17,21 +17,17 @@ public class UserDetailsImpl implements UserDetails {
     private String username;
     @JsonIgnore
     private String password;
-    private Collection<? extends GrantedAuthority> authorities;
+    private List<GrantedAuthority> authorities;
 
-    public UserDetailsImpl(Integer id, String username, String password, Collection<? extends GrantedAuthority> authorities) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.authorities = authorities;
-    }
+    public UserDetailsImpl(Integer id, String username, String password, List<GrantedAuthority> authorities) {
+            this.id = id;
+            this.username = username;
+            this.password = password;
+            this.authorities = authorities;
+        }
 
     public static UserDetailsImpl build(User user) {
-        Set<Role> roleSet = new HashSet<>();
-        roleSet.add(user.getRole());
-        List<GrantedAuthority> authorities = roleSet.stream().
-                map(role -> new SimpleGrantedAuthority(role.getRoleName())).collect(Collectors.toList());
-
+        List<GrantedAuthority> authorities = Arrays.stream(user.getRole().getRole().split(",")).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
         return new UserDetailsImpl(
                 user.getUserId(),
                 user.getUsername(),

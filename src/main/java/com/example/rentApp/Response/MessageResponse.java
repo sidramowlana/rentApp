@@ -1,17 +1,10 @@
 package com.example.rentApp.Response;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class MessageResponse {
     private String message;
-
-    public MessageResponse() {
-    }
-
-    public MessageResponse(String message) {
-        this.message = message;
-    }
 }
