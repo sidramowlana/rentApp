@@ -4,7 +4,6 @@ import com.example.rentApp.Models.Role;
 import com.example.rentApp.Models.User;
 import com.example.rentApp.Models.Vehicle;
 import com.example.rentApp.Models.VehicleType;
-import com.example.rentApp.Repositories.UserRepository;
 import com.example.rentApp.Repositories.VehicleTypeRepository;
 import com.example.rentApp.Response.MessageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +27,7 @@ public class VehicleTypeService {
             return ResponseEntity.badRequest().body(new MessageResponse("Vehicle Type already available!"));
         }
         VehicleType vehicleType = new VehicleType(
-                addVehicleType.getName(),
-                addVehicleType.getAmount());
+                addVehicleType.getName());
         vehicleTypeRepository.save(vehicleType);
         return ResponseEntity.ok(vehicleType);
     }
@@ -48,7 +46,12 @@ public class VehicleTypeService {
     public VehicleType getByVehicleTypeName(String name){
            return vehicleTypeRepository.findByName(name);
     }
-
+    public VehicleType getByVehicleType(VehicleType vehicleType){
+        System.out.println("hii");
+        System.out.println(vehicleType.getName());
+        vehicleTypeRepository.existsByName(vehicleType.getName());
+        return vehicleType;
+    }
     public ResponseEntity<?> getVehicleTypeId(Integer typeId) {
         if (vehicleTypeRepository.existsById(typeId)) {
             VehicleType vehicleType = vehicleTypeRepository.findById(typeId).get();
@@ -61,7 +64,6 @@ public class VehicleTypeService {
         if(vehicleTypeRepository.existsById(vehicleTypeId)){
             VehicleType vehicleType = vehicleTypeRepository.findById(vehicleTypeId).get();
             vehicleType.setName(newVehicleType.getName());
-            vehicleType.setAmount(newVehicleType.getAmount());
             vehicleTypeRepository.save(vehicleType);
             return ResponseEntity.ok().body(new MessageResponse("Successfully Added"));
         }

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("api/vehicles")
 @RestController
 public class VehicleController {
@@ -48,8 +48,8 @@ public class VehicleController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(value = "/delete/{vehicleId}")
-    public void deleteVehicleById(@PathVariable Integer equipmentId){
-        vehicleService.deleteVehicleById(equipmentId);
+    public void deleteVehicleById(@PathVariable Integer vehicleId){
+        vehicleService.deleteVehicleById(vehicleId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

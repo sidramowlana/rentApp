@@ -25,5 +25,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
 
     Boolean existsByVehicleId(Integer vehicleId);
 
+    void deleteByVehicleId(Integer VehicleId);
+
     void deleteByVehicleName(String name);
 }

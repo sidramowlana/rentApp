@@ -16,19 +16,24 @@ public class Vehicle {
     private Integer vehicleId;
     private String vehicleName;
     private String plateNo;
+    private double amount;
     private Integer quantity;
     private String description;
     private String imageUrl;
+    private boolean isRented;
 
-    @ManyToOne(cascade =CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name="vehicle_type", referencedColumnName = "vehicleTypeId")
+    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @JoinColumn(name = "vehicle_type", referencedColumnName = "vehicleTypeId")
     private VehicleType vehicleType;
 
-    public Vehicle(String vehicleName, String plateNo, Integer quatity, String description, String imageUrl) {
+
+    public Vehicle(String vehicleName, String plateNo, double amount, Integer quatity, String description, String imageUrl, boolean isRented) {
         this.vehicleName = vehicleName;
         this.plateNo = plateNo;
+        this.amount = amount;
         this.quantity = quatity;
         this.description = description;
         this.imageUrl = imageUrl;
+        this.isRented = false;
     }
 }

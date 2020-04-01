@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("api/equipment")
 @RestController
 public class EquipmentController {
@@ -29,13 +29,13 @@ public class EquipmentController {
     }
 
     //check if the user also needs this
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/all")
     public List<Equipment> getAllEquipments(){
         return equipmentService.getAllEquipments();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/all/{equipmentId}")
     public ResponseEntity<?> getEquipmentById(@PathVariable Integer equipmentId){
         return equipmentService.getEquipmentById(equipmentId);

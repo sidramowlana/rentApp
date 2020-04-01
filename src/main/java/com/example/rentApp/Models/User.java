@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.Set;
 
 @Table(name = "user")
@@ -27,9 +28,10 @@ public class User {
     private String username;
     private String password;
 
-    @ManyToOne(cascade =CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name="role", referencedColumnName = "roleId")
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "role", referencedColumnName = "roleId")
     private Role role;
+
 
     public User(String name, String nic, String dob, String email, String mobileNo, String drivingLicence, String username, String password) {
         this.name = name;

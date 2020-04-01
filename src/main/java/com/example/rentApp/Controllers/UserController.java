@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("api/users")
 @RestController
 public class UserController {
@@ -40,11 +40,19 @@ public class UserController {
         return userService.forgotPasswordProcess(userEmail,request);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/updatePassword/{userNameToken}", method = RequestMethod.PUT)
     public ResponseEntity<?> updateNewPassword(@PathVariable String userNameToken, @RequestBody String newPassword)
     {
-        System.out.println("token is "+userNameToken+" new password is "+newPassword);
+//        System.out.println("token is "+userNameToken+" new password is "+newPassword);
         System.out.println("******************************************************************************");
         return userService.updateNewPassword(userNameToken,newPassword);
+    }
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value = "/updateUser/{userId}", method = RequestMethod.PUT)
+    public ResponseEntity<?> updateUserProfileById(@PathVariable Integer userId, @RequestBody User newUser)
+    {
+        System.out.println("user id: "+userId+"user data:"+newUser);
+        return userService.updateUserById(userId,newUser);
     }
 }

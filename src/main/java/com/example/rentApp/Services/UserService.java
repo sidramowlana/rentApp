@@ -1,6 +1,7 @@
 package com.example.rentApp.Services;
 
 import com.example.rentApp.Models.PasswordResetToken;
+import com.example.rentApp.Models.Role;
 import com.example.rentApp.Models.User;
 import com.example.rentApp.Repositories.PasswordResetTokenRepository;
 import com.example.rentApp.Repositories.UserRepository;
@@ -25,6 +26,7 @@ import java.util.Optional;
 public class UserService {
 
     private UserRepository userRepository;
+    private  RoleService roleService;
     private PasswordEncoder passwordEncoder;
     private JavaMailSender javaMailSender;
     private PasswordResetTokenRepository passwordResetTokenRepository;
@@ -35,9 +37,10 @@ public class UserService {
     private int jwtExpirationMs;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+    public UserService(UserRepository userRepository, RoleService roleService,PasswordEncoder passwordEncoder,
                        JavaMailSender javaMailSender, PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
+        this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
         this.javaMailSender = javaMailSender;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
@@ -129,6 +132,21 @@ public class UserService {
         } else {
             return ResponseEntity.badRequest().body(new MessageResponse("Error user not available!"));
         }
+    }
+
+    public  ResponseEntity<?> updateUserById(Integer userId, User newUser){
+        if (userRepository.existsById(userId)) {
+            User user = userRepository.findById(userId).get();
+            user.setName(newUser.getName());
+            user.setNic(newUser.getNic());
+            user.setDob(newUser.getDob());
+            user.setEmail(newUser.getEmail());
+            user.setMobileNo(newUser.getMobileNo());
+            user.setDrivingLicence(newUser.getDrivingLicence());
+            user.setUsername(newUser.getUsername());
+            userRepository.save(user);
+        }
+        return ResponseEntity.ok(new MessageResponse("User Successfully Updated"));
     }
 }
 

@@ -1,29 +1,28 @@
 package com.example.rentApp.Models;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.*;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 public class VehicleType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer vehicleTypeId;
-
     private String name;
-    private double amount;
 
-    public VehicleType(String name, double amount) {
+
+    public VehicleType(String name) {
         this.name = name;
-        this.amount = amount;
+    }
+
+    public VehicleType(Integer vehicleTypeId, String name) {
+        this.vehicleTypeId = vehicleTypeId;
+        this.name = name;
     }
 }
