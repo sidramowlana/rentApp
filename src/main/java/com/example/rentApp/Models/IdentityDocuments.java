@@ -20,7 +20,8 @@ public class IdentityDocuments {
     private String utilityBillImage;
 
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "user", referencedColumnName = "userId")
     private User user;
 
