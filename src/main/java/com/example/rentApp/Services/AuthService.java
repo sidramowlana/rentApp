@@ -1,9 +1,7 @@
 package com.example.rentApp.Services;
 
-import com.example.rentApp.Models.EnumRole;
 import com.example.rentApp.Models.Role;
 import com.example.rentApp.Models.User;
-import com.example.rentApp.Repositories.RoleRepository;
 import com.example.rentApp.Repositories.UserRepository;
 import com.example.rentApp.Request.AuthRequest;
 import com.example.rentApp.Response.JwtResponse;
@@ -13,11 +11,9 @@ import com.example.rentApp.Security.Service.UserDetailsImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import com.example.rentApp.Security.Service.UserDetailsServiceImpl;
 import com.example.rentApp.Security.jwt.JwtUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

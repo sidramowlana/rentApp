@@ -36,4 +36,5 @@ public class Vehicle {
         this.imageUrl = imageUrl;
         this.isRented = false;
     }
+
 }

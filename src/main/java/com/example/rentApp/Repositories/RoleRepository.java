@@ -5,10 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 
-//@CrossOrigin(origins = "http://localhost:4200")
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Integer> {
-//    Optional<Role> findByRoleName(String name);
     Role findByRole(String role);
 
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -17,10 +18,11 @@ public class Rent {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer rentId;
-    private String dateTimeFrom;
-    private String dateTimeTo;
+    private Date dateTimeFrom;
+    private Date dateTimeTo;
+    private boolean vehicleIsRented;
 
-//    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    //    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "user", referencedColumnName = "userId")
     private User user;
@@ -34,21 +36,20 @@ public class Rent {
     @JoinColumn(nullable = false, name = "vehicle")
     private Vehicle vehicle;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-//    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
-    @JoinTable(name = "vehicle_rent_equipments",
-            joinColumns = @JoinColumn(name = "rent_id", referencedColumnName = "rentId"),
-            inverseJoinColumns = @JoinColumn(name = "equipment_id", referencedColumnName = "equipmentId"))
-    private Set<Equipment> equipment;
+    @OneToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @JoinColumn(name = "rent", referencedColumnName = "rentId")
+    private List<VehicleRentEquipments> VehicleRentEquipments;
 
     @Transient
-    private Integer[] equipmentList;
-
+    private List<Equipment> equipmentsList;
+    @Transient
+    private Integer[] list;
     @Transient
     private String drivingLicenceImagefile;
-    @Transient String utilityBillImagefile;
+    @Transient
+    String utilityBillImagefile;
 
-    public Rent(String dateTimeFrom, String dateTimeTo) {
+    public Rent(Date dateTimeFrom, Date dateTimeTo) {
         this.dateTimeFrom = dateTimeFrom;
         this.dateTimeTo = dateTimeTo;
     }
