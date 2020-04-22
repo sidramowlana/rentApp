@@ -1,14 +1,12 @@
 package com.example.rentApp.Models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -20,6 +18,7 @@ public class Rent {
     private Integer rentId;
     private Date dateTimeFrom;
     private Date dateTimeTo;
+    private Date currentDateTime;
     private boolean vehicleIsRented;
 
     //    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
@@ -49,10 +48,9 @@ public class Rent {
     @Transient
     String utilityBillImagefile;
 
-    public Rent(Date dateTimeFrom, Date dateTimeTo) {
+    public Rent(Date dateTimeFrom, Date dateTimeTo, Date currentDateTime) {
         this.dateTimeFrom = dateTimeFrom;
         this.dateTimeTo = dateTimeTo;
+        this.currentDateTime = currentDateTime;
     }
-
-
 }

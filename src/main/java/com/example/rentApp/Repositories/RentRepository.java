@@ -4,6 +4,7 @@ import com.example.rentApp.Models.Equipment;
 import com.example.rentApp.Models.Rent;
 import com.example.rentApp.Models.User;
 import com.example.rentApp.Models.Vehicle;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,4 +20,5 @@ public interface RentRepository extends JpaRepository<Rent, Integer> {
 
     Boolean existsByVehicleVehicleId(Integer vehicleId);
 
+    List<Rent> findByUserUserId(Integer userId);
 }

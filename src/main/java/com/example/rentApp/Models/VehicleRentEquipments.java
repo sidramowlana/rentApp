@@ -1,5 +1,6 @@
 package com.example.rentApp.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -16,6 +17,7 @@ public class VehicleRentEquipments {
 
     @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     @JoinColumn(name = "rent", referencedColumnName = "rentId")
+    @JsonIgnore
     private Rent rent;
 
     @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
