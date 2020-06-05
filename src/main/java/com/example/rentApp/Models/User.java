@@ -16,7 +16,7 @@ import java.util.Set;
 @Entity
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
 
     private String name;
@@ -27,13 +27,14 @@ public class User {
     private String drivingLicence;
     private String username;
     private String password;
+    private boolean isBlackListed;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "role", referencedColumnName = "roleId")
     private Role role;
 
 
-    public User(String name, String nic, String dob, String email, String mobileNo, String drivingLicence, String username, String password) {
+    public User(String name, String nic, String dob, String email, String mobileNo, String drivingLicence, String username, String password, boolean isBlackListed) {
         this.name = name;
         this.nic = nic;
         this.dob = dob;
@@ -42,5 +43,6 @@ public class User {
         this.drivingLicence = drivingLicence;
         this.username = username;
         this.password = password;
+        this.isBlackListed = false;
     }
 }

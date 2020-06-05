@@ -3,8 +3,6 @@ package com.example.rentApp.Services;
 import com.example.rentApp.Models.*;
 import com.example.rentApp.Repositories.*;
 import com.example.rentApp.Response.MessageResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,7 +10,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
-
 
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -25,7 +22,6 @@ public class RentService {
     private EquipmentRepository equipmentRepository;
     private IdentityDocumentsRepository identityDocumentsRepository;
     private VehicleRentEquipmentsRepository vehicleRentEquipmentsRepository;
-    private static final Logger logger = LoggerFactory.getLogger(RentService.class);
 
 
     @Autowired
@@ -44,44 +40,52 @@ public class RentService {
         long diff = newRent.getDateTimeTo().getTime() - newRent.getDateTimeFrom().getTime();
         long datediff = diff / 1000 / 60 / 60 / 24;
         long hrsdiff = diff / 1000 / 60 / 60;
-        if (datediff <= 14 && hrsdiff >= 5) {
-            if (rentRepository.existsByVehicleVehicleId(vehicleId)) {
-                Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
-                List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
-                if (rentList.size() > 0) {
-                    return ResponseEntity.ok().body(new MessageResponse("Time slots are taken already. Please select another time slot"));
+        double totalAmount;
+        System.out.println(username.get().isBlackListed()+" is user name "+username.get().getUsername());
+        if(username.get().isBlackListed()==false) {
+            if (datediff <= 14 && hrsdiff >= 5) {
+                if (rentRepository.existsByVehicleVehicleId(vehicleId)) {
+                    Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
+                    List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
+                    totalAmount = vehicle.getAmount() * datediff;
+                    if (rentList.size() > 0) {
+                        return ResponseEntity.ok().body(new MessageResponse("Time slots are taken already. Please select another time slot"));
+                    } else {
+                        return saveRent(newRent, username, vehicle, totalAmount);
+                    }
                 } else {
-                    saveRent(newRent, username, vehicle);
-                    return ResponseEntity.ok().body(new MessageResponse("Your booking request is successfully made. Please be on time and collect the booked vehicle."));
+                    Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
+                    totalAmount = vehicle.getAmount() * datediff;
+                    return saveRent(newRent, username, vehicle, totalAmount);
                 }
             } else {
-                Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
-                saveRent(newRent, username, vehicle);
-                return ResponseEntity.ok().body(new MessageResponse("Your booking request is successfully made. Please be on time and collect the booked vehicle."));
+                return ResponseEntity.ok().body(new MessageResponse("The vehicle can be rented minimum for 5 hrs and maximum for 14 days"));
             }
-        } else {
-            return ResponseEntity.ok().body(new MessageResponse("The vehcile can be rented minimum for 5 hrs and maximum for 14 days"));
+        }
+        else
+        {
+            return ResponseEntity.ok().body(new MessageResponse("User is blacklisted"));
         }
     }
 
-    public ResponseEntity<?> saveRent(Rent newRent, Optional<User> username, Vehicle vehicle) {
+    public ResponseEntity<?> saveRent(Rent newRent, Optional<User> username, Vehicle vehicle, Double total) {
         Integer[] list;
         List<VehicleRentEquipments> vehicleRentEquipmentList = new ArrayList<>();
         Rent rent = new Rent();
         Date currentDate = new Date();
-        System.out.println(currentDate);
         rent.setCurrentDateTime(currentDate);
         rent.setDateTimeFrom(newRent.getDateTimeFrom());
         rent.setDateTimeTo(newRent.getDateTimeTo());
         rent.setUser(username.get());
         rent.setVehicle(vehicle);
+        rent.setTotalRentalAmount(total);
         IdentityDocuments identityDocuments = new IdentityDocuments();
-//        identityDocuments.setUser(username.get());
         identityDocuments.setUtilityBillImage(newRent.getUtilityBillImagefile());
         identityDocuments.setDrivingLicenceImage(newRent.getDrivingLicenceImagefile());
         identityDocumentsRepository.save(identityDocuments);
         rent.setIdentityDocuments(identityDocuments);
         list = newRent.getList();
+        if (list != null) {
         for (int j = 0; j < list.length; j++) {
             Equipment equipment = equipmentRepository.findById(list[j]).get();
             VehicleRentEquipments vehicleRentEquipment = new VehicleRentEquipments();
@@ -95,12 +99,14 @@ public class RentService {
             } else {
                 rent.setVehicleRentEquipments(vehicleRentEquipmentList);
                 rent.getVehicleRentEquipments().add(vehicleRentEquipment);
+                }
             }
         }
+        rent.setRentExtended(false);
         rent.getVehicle().setRented(true);
         rent.setVehicleRentEquipments(vehicleRentEquipmentList);
         rentRepository.save(rent);
-        return ResponseEntity.ok().body(new MessageResponse(""));
+        return ResponseEntity.ok().body(new MessageResponse("booking confirmed"));
     }
 
     public List<Rent> getAllRent(Integer userId) {
@@ -108,15 +114,21 @@ public class RentService {
         return rentList;
     }
 
-    public List<Rent> getAll(){
-        return rentRepository.findAll();
+    public List<Rent> getAllNotBlackListUserRents() {
+        List<Rent> newRentList = rentRepository.findAllByUserIsBlackListed(false);
+        return newRentList;
     }
 
-    public ResponseEntity<?> extendRentByRentId(Integer rentId,Rent updateRent) {
+    public List<Rent> getAllBlackListUserRents()
+    {
+        List<Rent> newRentList = rentRepository.findAllByUserIsBlackListed(true);
+        return newRentList;
+    }
+    public ResponseEntity<?> extendRentByRentId(Integer rentId, Rent updateRent) {
         //when extending check if the vehicle is booked in the extended date
         if (rentRepository.existsById(rentId)) {
             Rent rent = rentRepository.findById(rentId).get();
-            if(vehicleRentEquipmentsRepository.existsByRent(rent)){
+            if (vehicleRentEquipmentsRepository.existsByRent(rent)) {
                 VehicleRentEquipments vehicleRentEquipment = vehicleRentEquipmentsRepository.findByRent(rent);
                 Date dateTimeTo = rent.getDateTimeTo();
                 Calendar calendar = Calendar.getInstance();
@@ -126,18 +138,10 @@ public class RentService {
                 calendar.set(Calendar.SECOND, 0);
                 Date newDateTime = calendar.getTime();
                 rent.setDateTimeTo(newDateTime);
-//                if (vehicleRentEquipmentList.size() > 0) {
-//                    for (int i = 0; i < vehicleRentEquipmentList.size(); i++) {
-//                        vehicleRentEquipmentList.get(i).setEndDate(newDateTime);
-//}
-//                } else {
-//                    vehicleRentEquipmentList.get(0).setEndDate(newDateTime);
-//                }
+                rent.setRentExtended(true);
                 vehicleRentEquipment.setEndDate(newDateTime);
                 vehicleRentEquipmentsRepository.save(vehicleRentEquipment);
-            }
-            else
-            {
+            } else {
                 Date dateTimeTo = rent.getDateTimeTo();
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(dateTimeTo);
@@ -146,14 +150,44 @@ public class RentService {
                 calendar.set(Calendar.SECOND, 0);
                 Date newDateTime = calendar.getTime();
                 rent.setDateTimeTo(newDateTime);
+                rent.setRentExtended(true);
             }
             rentRepository.save(rent);
         }
         return ResponseEntity.ok().body(new MessageResponse("The booking time is extended successfully"));
     }
-    public Rent getAllRentById(Integer rentId)
-    {
+
+    public ResponseEntity<?> isTakenRentByRentId(Integer rentId, Rent updateIsTakenRent) {
+        if (rentRepository.existsById(rentId)) {
+            Rent rent = rentRepository.findById(rentId).get();
+            rent.setTaken(true);
+            rentRepository.save(rent);
+        }
+        return ResponseEntity.ok().body(new MessageResponse("Updated"));
+    }
+
+    public Rent getAllRentById(Integer rentId) {
         Rent rent = rentRepository.findById(rentId).get();
         return rent;
+    }
+
+    public void deleteRentByRentId(Integer rentId) {
+        if (vehicleRentEquipmentsRepository.existsById(rentId)) {
+            vehicleRentEquipmentsRepository.deleteById(rentId);
+            if (rentRepository.existsById(rentId)) {
+                rentRepository.deleteById(rentId);
+            }
+        }
+    }
+
+    public ResponseEntity<?> updateBlackListUser(Integer rentId)
+    {
+        if(rentRepository.existsById(rentId)){
+            Rent rent = rentRepository.findById(rentId).get();
+            User user = userRepository.findById(rent.getUser().getUserId()).get();
+            user.setBlackListed(true);
+            userRepository.save(user);
+        }
+        return ResponseEntity.ok().body(new MessageResponse("User is black listed"));
     }
 }

@@ -34,7 +34,7 @@ public class VehicleController {
     }
 
     //check if the user also needs this
-    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+//    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/all")
     public List<Vehicle> getAllVehicles(){
         return vehicleService.getAllVehicles();

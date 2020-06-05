@@ -40,6 +40,7 @@ public class VehicleService {
     public ResponseEntity<?> getVehicleById(Integer typeId) {
         if (vehicleRepository.existsById(typeId)) {
             Vehicle vehicle = vehicleRepository.findById(typeId).get();
+            System.out.println(vehicle.getVehicleId());
             return ResponseEntity.ok(vehicle);
         }
         return ResponseEntity.badRequest().body(new MessageResponse("Vehicle not found!!!"));
@@ -54,7 +55,6 @@ public class VehicleService {
 //            return ResponseEntity.badRequest().body(new MessageResponse("Vehicle already exist!!!"));
 //        }
         VehicleType vehicleType = vehicleTypeService.getByVehicleTypeName(newVehicle.getVehicleType().getName());
-        System.out.println(vehicleType.getName());
         Vehicle vehicle = new Vehicle();
         vehicle.setVehicleName(newVehicle.getVehicleName());
         vehicle.setPlateNo(newVehicle.getPlateNo());
@@ -66,6 +66,7 @@ public class VehicleService {
 
         vehicle.setVehicleType(vehicleType);
         vehicleRepository.save(vehicle);
+        System.out.println(getVehicleById(vehicle.getVehicleId()));
         return ResponseEntity.ok().body(new MessageResponse("Successfully Added"));
     }
 

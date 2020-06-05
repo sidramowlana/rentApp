@@ -14,12 +14,15 @@ import java.util.List;
 public class Rent {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer rentId;
     private Date dateTimeFrom;
     private Date dateTimeTo;
     private Date currentDateTime;
     private boolean vehicleIsRented;
+    private boolean isRentExtended;
+    private double totalRentalAmount;
+    private boolean isTaken;
 
     //    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

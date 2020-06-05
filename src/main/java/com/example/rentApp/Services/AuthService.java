@@ -56,7 +56,8 @@ public class AuthService {
                 registerUser.getMobileNo(),
                 registerUser.getDrivingLicence(),
                 registerUser.getUsername(),
-                passwordEncoder.encode(registerUser.getPassword())
+                passwordEncoder.encode(registerUser.getPassword()),
+                registerUser.isBlackListed()
         );
 
         Role role = roleService.getRoleByName("ROLE_USER");
