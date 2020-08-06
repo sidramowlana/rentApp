@@ -108,7 +108,6 @@ public class UserService {
 
             //send an email with the token to that user
             String appUrl = request.getScheme() + "://" + request.getServerName() + ":4200";
-//            String appUrl = "http://localhost:4200/";
             SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
             simpleMailMessage.setTo(passwordResetToken.getUser().getEmail());
             simpleMailMessage.setSubject("Password Reset Request");
@@ -123,12 +122,8 @@ public class UserService {
     }
 
     public ResponseEntity<?> updateNewPassword(String userNameToken, String newPassword,HttpServletRequest request) {
-        System.out.println("token is "+userNameToken+" new password is "+newPassword);
-
         if (passwordResetTokenRepository.existsByToken(userNameToken)) {
             PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(userNameToken);
-            System.out.println("passwodroken: "+passwordResetToken);
-            System.out.println("passwodroken: "+passwordResetToken.getUser());
             User user = passwordResetToken.getUser();
             if (userRepository.existsById(user.getUserId())) {
                 user.setPassword(newPassword);
@@ -142,11 +137,8 @@ public class UserService {
         else
         {
             Optional<User> username = userRepository.findByUsername(request.getUserPrincipal().getName());
-            System.out.println(username.get().getUsername()+" helloluffy");
             return ResponseEntity.ok().body(new MessageResponse("Password Successfully updated."));
-
         }
-
     }
 
     public  ResponseEntity<?> updateUserById(Integer userId, User newUser){

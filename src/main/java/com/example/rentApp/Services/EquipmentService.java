@@ -29,7 +29,6 @@ public class EquipmentService {
                 newEquipment.getDescription(),
                 newEquipment.getImageUrl()
         );
-        System.out.println(equipment.getEquipmentName());
         equipmentRepository.save(equipment);
         return ResponseEntity.ok().body(new MessageResponse("Successfully Added"));
     }

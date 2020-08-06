@@ -41,7 +41,6 @@ public class RentService {
         long datediff = diff / 1000 / 60 / 60 / 24;
         long hrsdiff = diff / 1000 / 60 / 60;
         double totalAmount;
-        System.out.println(username.get().isBlackListed()+" is user name "+username.get().getUsername());
         if(username.get().isBlackListed()==false) {
             if (datediff <= 14 && hrsdiff >= 5) {
                 if (rentRepository.existsByVehicleVehicleId(vehicleId)) {

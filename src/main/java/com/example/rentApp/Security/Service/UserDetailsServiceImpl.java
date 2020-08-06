@@ -1,7 +1,6 @@
 package com.example.rentApp.Security.Service;
 
 import com.example.rentApp.Models.User;
-import com.example.rentApp.Repositories.UserRepository;
 import com.example.rentApp.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -1,6 +1,5 @@
 package com.example.rentApp.Security.Service;
 
-import com.example.rentApp.Models.Role;
 import com.example.rentApp.Models.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
