@@ -1,10 +1,16 @@
 package com.example.rentApp.Services;
 
+import com.example.rentApp.Integration.Models.DMV;
+import com.example.rentApp.Integration.Repository.DMVRepository;
+import com.example.rentApp.Integration.Service.DMVCallbackService;
+import com.example.rentApp.Integration.Service.DMVSchedulerService;
 import com.example.rentApp.Models.*;
 import com.example.rentApp.Repositories.*;
 import com.example.rentApp.Response.MessageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
@@ -22,48 +28,61 @@ public class RentService {
     private EquipmentRepository equipmentRepository;
     private IdentityDocumentsRepository identityDocumentsRepository;
     private VehicleRentEquipmentsRepository vehicleRentEquipmentsRepository;
-
+    private JavaMailSender javaMailSender;
+    private DMVSchedulerService dmvSchedulerService;
+    private DMVRepository dmvRepository;
 
     @Autowired
-    public RentService(RentRepository rentRepository, VehicleRepository vehicleRepository, UserRepository userRepository, EquipmentRepository equipmentRepository,
-                       IdentityDocumentsRepository identityDocumentsRepository, VehicleRentEquipmentsRepository vehicleRentEquipmentsRepository) {
+    public RentService(RentRepository rentRepository, VehicleRepository vehicleRepository, UserRepository userRepository, EquipmentRepository equipmentRepository, IdentityDocumentsRepository identityDocumentsRepository, VehicleRentEquipmentsRepository vehicleRentEquipmentsRepository, JavaMailSender javaMailSender, DMVSchedulerService dmvSchedulerService, DMVRepository dmvRepository) {
         this.rentRepository = rentRepository;
         this.vehicleRepository = vehicleRepository;
         this.userRepository = userRepository;
         this.equipmentRepository = equipmentRepository;
         this.identityDocumentsRepository = identityDocumentsRepository;
         this.vehicleRentEquipmentsRepository = vehicleRentEquipmentsRepository;
+        this.javaMailSender = javaMailSender;
+        this.dmvSchedulerService = dmvSchedulerService;
+        this.dmvRepository = dmvRepository;
     }
+
 
     public ResponseEntity<?> addNewRent(Integer vehicleId, Rent newRent, HttpServletRequest httpServletRequest) {
         Optional<User> username = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName());
-        long diff = newRent.getDateTimeTo().getTime() - newRent.getDateTimeFrom().getTime();
-        long datediff = diff / 1000 / 60 / 60 / 24;
-        long hrsdiff = diff / 1000 / 60 / 60;
-        double totalAmount;
-        if(username.get().isBlackListed()==false) {
-            if (datediff <= 14 && hrsdiff >= 5) {
-                if (rentRepository.existsByVehicleVehicleId(vehicleId)) {
-                    Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
-                    List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
-                    totalAmount = vehicle.getAmount() * datediff;
-                    if (rentList.size() > 0) {
-                        return ResponseEntity.ok().body(new MessageResponse("Time slots are taken already. Please select another time slot"));
+        User user = userRepository.findByUsername(username.get().getUsername()).get();
+        //check if user is allowed to rent with hos license;
+        if (!dmvRepository.existsByDrivingLicence(user.getDrivingLicence())) {
+            System.out.println("can do the renting work without problem ");
+            long diff = newRent.getDateTimeTo().getTime() - newRent.getDateTimeFrom().getTime();
+            long datediff = diff / 1000 / 60 / 60 / 24;
+            long hrsdiff = diff / 1000 / 60 / 60;
+            double totalAmount;
+            if (username.get().isBlackListed() == false) {
+                if (datediff <= 14 && hrsdiff >= 5) {
+                    if (rentRepository.existsByVehicleVehicleId(vehicleId)) {
+                        Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
+                        List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
+                        totalAmount = vehicle.getAmount() * datediff;
+                        if (rentList.size() > 0) {
+                            return ResponseEntity.ok().body(new MessageResponse("Time slots are taken already. Please select another time slot"));
+                        } else {
+                            return saveRent(newRent, username, vehicle, totalAmount);
+                        }
                     } else {
+                        Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
+                        totalAmount = vehicle.getAmount() * datediff;
                         return saveRent(newRent, username, vehicle, totalAmount);
                     }
                 } else {
-                    Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
-                    totalAmount = vehicle.getAmount() * datediff;
-                    return saveRent(newRent, username, vehicle, totalAmount);
+                    return ResponseEntity.ok().body(new MessageResponse("The vehicle can be rented minimum for 5 hrs and maximum for 14 days"));
                 }
             } else {
-                return ResponseEntity.ok().body(new MessageResponse("The vehicle can be rented minimum for 5 hrs and maximum for 14 days"));
+                return ResponseEntity.ok().body(new MessageResponse("User is blacklisted"));
             }
-        }
-        else
-        {
-            return ResponseEntity.ok().body(new MessageResponse("User is blacklisted"));
+        } else {
+            System.out.println("have to send an email to DMV");
+            Date date = new Date();
+            sendEmailToDMV(user, date.toString(), dmvSchedulerService.getType(user));
+            return ResponseEntity.badRequest().body(new MessageResponse("Cannot allow the user with license " + user.getDrivingLicence() + " to rent"));
         }
     }
 
@@ -85,19 +104,19 @@ public class RentService {
         rent.setIdentityDocuments(identityDocuments);
         list = newRent.getList();
         if (list != null) {
-        for (int j = 0; j < list.length; j++) {
-            Equipment equipment = equipmentRepository.findById(list[j]).get();
-            VehicleRentEquipments vehicleRentEquipment = new VehicleRentEquipments();
-            vehicleRentEquipment.setEquipment(equipment);
-            vehicleRentEquipment.setStartDate(newRent.getDateTimeFrom());
-            vehicleRentEquipment.setEndDate(newRent.getDateTimeTo());
-            vehicleRentEquipmentList.add(vehicleRentEquipment);
-            List<VehicleRentEquipments> equipmentList = vehicleRentEquipmentsRepository.findByEquipmentAndStartDateLessThanEqualAndEndDateGreaterThanEqual(equipment, vehicleRentEquipment.getEndDate(), vehicleRentEquipment.getStartDate());
-            if (equipmentList.size() > 0) {
-                return ResponseEntity.ok().body(new MessageResponse("The equipments are already booked in the selected time slot"));
-            } else {
-                rent.setVehicleRentEquipments(vehicleRentEquipmentList);
-                rent.getVehicleRentEquipments().add(vehicleRentEquipment);
+            for (int j = 0; j < list.length; j++) {
+                Equipment equipment = equipmentRepository.findById(list[j]).get();
+                VehicleRentEquipments vehicleRentEquipment = new VehicleRentEquipments();
+                vehicleRentEquipment.setEquipment(equipment);
+                vehicleRentEquipment.setStartDate(newRent.getDateTimeFrom());
+                vehicleRentEquipment.setEndDate(newRent.getDateTimeTo());
+                vehicleRentEquipmentList.add(vehicleRentEquipment);
+                List<VehicleRentEquipments> equipmentList = vehicleRentEquipmentsRepository.findByEquipmentAndStartDateLessThanEqualAndEndDateGreaterThanEqual(equipment, vehicleRentEquipment.getEndDate(), vehicleRentEquipment.getStartDate());
+                if (equipmentList.size() > 0) {
+                    return ResponseEntity.ok().body(new MessageResponse("The equipments are already booked in the selected time slot"));
+                } else {
+                    rent.setVehicleRentEquipments(vehicleRentEquipmentList);
+                    rent.getVehicleRentEquipments().add(vehicleRentEquipment);
                 }
             }
         }
@@ -118,11 +137,11 @@ public class RentService {
         return newRentList;
     }
 
-    public List<Rent> getAllBlackListUserRents()
-    {
+    public List<Rent> getAllBlackListUserRents() {
         List<Rent> newRentList = rentRepository.findAllByUserIsBlackListed(true);
         return newRentList;
     }
+
     public ResponseEntity<?> extendRentByRentId(Integer rentId, Rent updateRent) {
         //when extending check if the vehicle is booked in the extended date
         if (rentRepository.existsById(rentId)) {
@@ -179,9 +198,8 @@ public class RentService {
         }
     }
 
-    public ResponseEntity<?> updateBlackListUser(Integer rentId)
-    {
-        if(rentRepository.existsById(rentId)){
+    public ResponseEntity<?> updateBlackListUser(Integer rentId) {
+        if (rentRepository.existsById(rentId)) {
             Rent rent = rentRepository.findById(rentId).get();
             User user = userRepository.findById(rent.getUser().getUserId()).get();
             user.setBlackListed(true);
@@ -189,4 +207,15 @@ public class RentService {
         }
         return ResponseEntity.ok().body(new MessageResponse("User is black listed"));
     }
-}
+
+    public void sendEmailToDMV(User user, String dateTime, String type) {
+        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+        simpleMailMessage.setTo("sidra.sm18@gmail.com");
+        simpleMailMessage.setSubject("Invalid licences");
+        simpleMailMessage.setText("User registration number =" + user.getUserId() +
+                "\\n" + "User Driving license = " + user.getDrivingLicence() +
+                "\\n" + "Attempt date and time = " + dateTime +
+                "\\n" + " The license type = " + type);
+        javaMailSender.send(simpleMailMessage);
+    }
+ }

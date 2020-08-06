@@ -22,12 +22,10 @@ public class RentController {
         this.rentService = rentService;
     }
 
-
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @PostMapping(value = "/createRent/{vehicleId}")
     public ResponseEntity<?> addRent(@PathVariable Integer vehicleId, @RequestBody Rent newRent, HttpServletRequest httpServletRequest)
     {
-        System.out.println(vehicleId);
         return rentService.addNewRent(vehicleId, newRent, httpServletRequest);
     }
 
