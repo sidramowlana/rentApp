@@ -7,10 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class UserDetailsImpl implements UserDetails {
@@ -20,26 +17,23 @@ public class UserDetailsImpl implements UserDetails {
     private String username;
     @JsonIgnore
     private String password;
-    private Collection<? extends GrantedAuthority> authorities;
+    private List<GrantedAuthority> authorities;
 
-    public UserDetailsImpl(Integer id, String username, String password, Collection<? extends GrantedAuthority> authorities) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.authorities = authorities;
-    }
+    public UserDetailsImpl(Integer id, String username, String password, List<GrantedAuthority> authorities) {
+            this.id = id;
+            this.username = username;
+            this.password = password;
+            this.authorities = authorities;
+        }
 
     public static UserDetailsImpl build(User user) {
-
-        List<GrantedAuthority> authorities = user.getRoleSet().stream().
-                map(role -> new SimpleGrantedAuthority(role.getRoleName().name())).
-                collect(Collectors.toList());
-
+        List<GrantedAuthority> authorities = Arrays.stream(user.getRole().getRole().split(",")).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
         return new UserDetailsImpl(
                 user.getUserId(),
                 user.getUsername(),
                 user.getPassword(),
                 authorities);
+
     }
 
     @Override

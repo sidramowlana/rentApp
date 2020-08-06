@@ -2,23 +2,20 @@ package com.example.rentApp.Security.Service;
 
 import com.example.rentApp.Models.User;
 import com.example.rentApp.Repositories.UserRepository;
+import com.example.rentApp.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
-    @Autowired
-    UserRepository userRepository;
 
-    @Override
-    @Transactional
+    @Autowired UserService userService;
+
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User Not Found with username: " + username));
+        User user = userService.getUserByUserName(username);
         return UserDetailsImpl.build(user);
     }
 }

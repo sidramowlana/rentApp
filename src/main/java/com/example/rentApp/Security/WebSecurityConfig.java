@@ -22,49 +22,34 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
-    UserDetailsServiceImpl userDetailsService;
-
-    @Autowired
-    private  AuthTokenFilter filter;
-
-    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
     private AuthEntryPointJwt unauthorizedHandler;
-
-//    @Bean
-//    public AuthTokenFilter authenticationJwtTokenFilter() {
-//        return new AuthTokenFilter();
-//    }
+    private AuthTokenFilter filter;
+    @Autowired
+    public WebSecurityConfig(UserDetailsServiceImpl userDetailsService, AuthEntryPointJwt unauthorizedHandler, AuthTokenFilter filter) {
+        this.userDetailsService = userDetailsService;
+        this.unauthorizedHandler = unauthorizedHandler;
+        this.filter = filter;
+    }
 
     @Override
     public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
         authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
     }
-
     @Bean
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        System.out.println("----------------------------");
         http.cors().and().csrf().disable()
-//                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-
-//				.authorizeRequests()
-//				.antMatchers("/api/admin/**").permitAll()
-//                .anyRequest().permitAll();
+                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
                 .authorizeRequests().antMatchers("/api/auth/**").permitAll()
-//				.antMatchers("/api/admin/**").permitAll()
-//				.antMatchers("/api/test/**").permitAll()
-//				.antMatchers("/api/tournament/**").permitAll()
-//				.antMatchers("/api/teamNames/*").permitAll()
                 .anyRequest().authenticated().and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 

@@ -1,38 +1,28 @@
 package com.example.rentApp.Models;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
+@Data
+@NoArgsConstructor
 public class Role {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int roleId;
+    private Integer roleId;
+    private String role;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private EnumRole roleName;
 
-    public Role() {}
-
-    public Role(EnumRole roleName) {
-        this.roleName = roleName;
-    }
-
-    public Integer getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(Integer roleId) {
-        this.roleId = roleId;
-    }
-
-    public EnumRole getRoleName() {
-        return roleName;
-    }
-
-    public void setRoleName(EnumRole roleName) {
-        this.roleName = roleName;
+    public Role(String role) {
+        this.role = role;
     }
 }
