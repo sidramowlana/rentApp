@@ -25,8 +25,9 @@ public class RentController {
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @PostMapping(value = "/createRent/{vehicleId}")
-    public ResponseEntity<?> addRent(@PathVariable Integer vehicleId, @RequestBody Rent newRent, HttpServletRequest httpServletRequest) {
-        System.out.println(newRent);
+    public ResponseEntity<?> addRent(@PathVariable Integer vehicleId, @RequestBody Rent newRent, HttpServletRequest httpServletRequest)
+    {
+        System.out.println(vehicleId);
         return rentService.addNewRent(vehicleId, newRent, httpServletRequest);
     }
 
@@ -35,6 +36,7 @@ public class RentController {
     public List<Rent> getAllRentsByUserId(@PathVariable Integer userId) {
         return rentService.getAllRent(userId);
     }
+
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @GetMapping(value = "/all/rent/{rentId}")
     public Rent getAllRentsByRentId(@PathVariable Integer rentId) {
@@ -43,15 +45,39 @@ public class RentController {
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/extendRent/{rentId}", method = RequestMethod.PUT)
-    public ResponseEntity<?> extendRentByRentId(@PathVariable Integer rentId,@RequestBody Rent rent)
-    {
-        return rentService.extendRentByRentId(rentId,rent);
+    public ResponseEntity<?> extendRentByRentId(@PathVariable Integer rentId, @RequestBody Rent rent) {
+        return rentService.extendRentByRentId(rentId, rent);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @RequestMapping(value = "/rentIsTaken/{rentId}", method = RequestMethod.PUT)
+    public ResponseEntity<?> updateIsTakenRentByRentId(@PathVariable Integer rentId, @RequestBody Rent rent) {
+        return rentService.isTakenRentByRentId(rentId, rent);
     }
 
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
-    @GetMapping(value = "/all")
-    public List<Rent> getAll() {
-        return rentService.getAll();
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping(value = "/allNotBlacklist")
+    public List<Rent> getAllNotBlackListUserRents() {
+        return rentService.getAllNotBlackListUserRents();
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping(value = "/deleteRent/{rentId}")
+    public void deleteRentByRentId(@PathVariable Integer rentId) {
+        rentService.deleteRentByRentId(rentId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @RequestMapping(value = "/blacklistUser/{rentId}", method = RequestMethod.PUT)
+    public void updateBlackListUser(@PathVariable Integer rentId) {
+        rentService.updateBlackListUser(rentId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping(value = "/allBlacklist")
+    public List<Rent> getAllBlackListUserRents() {
+        return rentService.getAllBlackListUserRents();
+    }
+
 }

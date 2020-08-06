@@ -54,7 +54,6 @@ public class VehicleService {
 //            return ResponseEntity.badRequest().body(new MessageResponse("Vehicle already exist!!!"));
 //        }
         VehicleType vehicleType = vehicleTypeService.getByVehicleTypeName(newVehicle.getVehicleType().getName());
-        System.out.println(vehicleType.getName());
         Vehicle vehicle = new Vehicle();
         vehicle.setVehicleName(newVehicle.getVehicleName());
         vehicle.setPlateNo(newVehicle.getPlateNo());
@@ -70,19 +69,9 @@ public class VehicleService {
     }
 
     public ResponseEntity<?> updateVehicleById(Integer id, Vehicle updateVehicle) {
-        System.out.println("before if condition");
-        System.out.println("this : " + id);
-
         if (vehicleRepository.existsById(id)) {
-            System.out.println("after if condition");
-
             Vehicle vehicle = vehicleRepository.findById(id).get();
-            System.out.println("this : " + id);
-            System.out.println("this : " + vehicle);
-
             VehicleType vehicleType = vehicleTypeService.getByVehicleTypeName(updateVehicle.getVehicleType().getName());
-            System.out.println(vehicleType);
-            System.out.println(vehicleType.getName());
             vehicle.setVehicleName(updateVehicle.getVehicleName());
             vehicle.setPlateNo(updateVehicle.getPlateNo());
             vehicle.setAmount(updateVehicle.getAmount());
@@ -106,12 +95,9 @@ public class VehicleService {
 
     public void deleteVehicleById(Integer vehicleId) {
         if (vehicleRepository.existsById(vehicleId)) {
-            System.out.println("yes id available: " + vehicleId);
             vehicleRepository.deleteById(vehicleId);
             new MessageResponse("Vehicle deleted succeffully");
-//            vehicleRepository.deleteByVehicleId(vehicleId);
         } else {
-            System.out.println("Vehicle Id not available");
             new MessageResponse("Vehicle Id not available");
         }
     }

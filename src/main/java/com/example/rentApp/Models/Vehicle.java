@@ -12,7 +12,7 @@ import javax.persistence.*;
 @Entity
 public class Vehicle {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer vehicleId;
     private String vehicleName;
     private String plateNo;

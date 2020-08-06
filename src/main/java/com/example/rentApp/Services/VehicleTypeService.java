@@ -47,8 +47,6 @@ public class VehicleTypeService {
            return vehicleTypeRepository.findByName(name);
     }
     public VehicleType getByVehicleType(VehicleType vehicleType){
-        System.out.println("hii");
-        System.out.println(vehicleType.getName());
         vehicleTypeRepository.existsByName(vehicleType.getName());
         return vehicleType;
     }
