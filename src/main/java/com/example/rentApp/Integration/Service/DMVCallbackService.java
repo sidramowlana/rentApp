@@ -23,13 +23,4 @@ public class DMVCallbackService {
         Call<List<DMV>> call = dmvapi.getAllLicense();
         call.enqueue(new CustomizeCallback<List<DMV>>(callback));
     }
-
-//    public static DMV validateLicense(String drivingLicence){
-//        final String apiUri="http://localhost:8090/api/dmv/getAll";
-//        Map<String,String> map = new HashMap<>();
-//        map.put("drivingLicence",drivingLicence);
-//        RestTemplate restTemplate = new RestTemplate();
-//        DMV dmv = restTemplate.getForObject(apiUri,DMV.class,map);
-//        return dmv;
-//    }
 }
