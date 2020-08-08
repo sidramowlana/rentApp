@@ -1,5 +1,6 @@
 package com.example.rentApp.Controllers;
 
+import com.example.rentApp.Integration.Service.InsurerDBService;
 import com.example.rentApp.Models.Rent;
 import com.example.rentApp.Models.User;
 import com.example.rentApp.Services.RentService;
@@ -11,15 +12,23 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 @RequestMapping("api/rent")
 @RestController
 public class RentController {
     private RentService rentService;
+private InsurerDBService insurerDBService;
 
     @Autowired
-    public RentController(RentService rentService) {
+    public RentController(RentService rentService, InsurerDBService insurerDBService) {
         this.rentService = rentService;
+        this.insurerDBService = insurerDBService;
+    }
+
+    @GetMapping(value = "/test/{userId}")
+    public boolean checkLicense(@PathVariable Integer userId)
+    {
+        return insurerDBService.checkLicenseFraud(userId);
     }
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -52,7 +61,6 @@ public class RentController {
     public ResponseEntity<?> updateIsTakenRentByRentId(@PathVariable Integer rentId, @RequestBody Rent rent) {
         return rentService.isTakenRentByRentId(rentId, rent);
     }
-
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/allNotBlacklist")

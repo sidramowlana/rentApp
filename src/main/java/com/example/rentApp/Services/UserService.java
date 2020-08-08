@@ -107,7 +107,7 @@ public class UserService {
             passwordResetTokenRepository.save(passwordResetToken);
 
             //send an email with the token to that user
-            String appUrl = request.getScheme() + "://" + request.getServerName() + ":4200";
+            String appUrl = request.getScheme() + "://" + request.getServerName() + ":4200/#";
             SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
             simpleMailMessage.setTo(passwordResetToken.getUser().getEmail());
             simpleMailMessage.setSubject("Password Reset Request");
@@ -122,12 +122,14 @@ public class UserService {
     }
 
     public ResponseEntity<?> updateNewPassword(String userNameToken, String newPassword,HttpServletRequest request) {
+        System.out.println(passwordResetTokenRepository.findByToken(userNameToken));
         if (passwordResetTokenRepository.existsByToken(userNameToken)) {
             PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(userNameToken);
             User user = passwordResetToken.getUser();
             if (userRepository.existsById(user.getUserId())) {
-                user.setPassword(newPassword);
-                user.setPassword(passwordEncoder.encode(user.getPassword()));
+                System.out.println(user.getPassword());
+                System.out.println(newPassword);
+                user.setPassword(passwordEncoder.encode(newPassword));
                 userRepository.save(user);
                 return ResponseEntity.ok().body(new MessageResponse("Password Successfully updated."));
             } else {
@@ -136,8 +138,12 @@ public class UserService {
         }
         else
         {
-            Optional<User> username = userRepository.findByUsername(request.getUserPrincipal().getName());
-            return ResponseEntity.ok().body(new MessageResponse("Password Successfully updated."));
+            System.out.println(newPassword);
+            String username =request.getUserPrincipal().getName();
+            User user = userRepository.findByUsername(username).get();
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            return ResponseEntity.ok().body(new MessageResponse("Password Successfully updated"));
         }
     }
 

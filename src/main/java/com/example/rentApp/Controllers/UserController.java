@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 @RequestMapping("api/users")
 @RestController
 public class UserController {
@@ -44,6 +44,7 @@ public class UserController {
 //    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/updatePassword/{userNameToken}", method = RequestMethod.PUT)
     public ResponseEntity<?> updateNewPassword(@PathVariable String userNameToken, @RequestBody String newPassword, HttpServletRequest request) {
+        System.out.println("called1");
         return userService.updateNewPassword(userNameToken, newPassword,request);
     }
 

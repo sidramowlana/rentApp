@@ -2,6 +2,7 @@ package com.example.rentApp.Services;
 
 import com.example.rentApp.Integration.Models.DMV;
 import com.example.rentApp.Integration.Repository.DMVRepository;
+import com.example.rentApp.Integration.Repository.InsurerDBRepository;
 import com.example.rentApp.Integration.Service.DMVCallbackService;
 import com.example.rentApp.Integration.Service.DMVSchedulerService;
 import com.example.rentApp.Models.*;
@@ -31,9 +32,11 @@ public class RentService {
     private JavaMailSender javaMailSender;
     private DMVSchedulerService dmvSchedulerService;
     private DMVRepository dmvRepository;
+    private InsurerDBRepository insurerDBRepository;
+
 
     @Autowired
-    public RentService(RentRepository rentRepository, VehicleRepository vehicleRepository, UserRepository userRepository, EquipmentRepository equipmentRepository, IdentityDocumentsRepository identityDocumentsRepository, VehicleRentEquipmentsRepository vehicleRentEquipmentsRepository, JavaMailSender javaMailSender, DMVSchedulerService dmvSchedulerService, DMVRepository dmvRepository) {
+    public RentService(RentRepository rentRepository, VehicleRepository vehicleRepository, UserRepository userRepository, EquipmentRepository equipmentRepository, IdentityDocumentsRepository identityDocumentsRepository, VehicleRentEquipmentsRepository vehicleRentEquipmentsRepository, JavaMailSender javaMailSender, DMVSchedulerService dmvSchedulerService, DMVRepository dmvRepository, InsurerDBRepository insurerDBRepository) {
         this.rentRepository = rentRepository;
         this.vehicleRepository = vehicleRepository;
         this.userRepository = userRepository;
@@ -43,40 +46,45 @@ public class RentService {
         this.javaMailSender = javaMailSender;
         this.dmvSchedulerService = dmvSchedulerService;
         this.dmvRepository = dmvRepository;
+        this.insurerDBRepository = insurerDBRepository;
     }
-
 
     public ResponseEntity<?> addNewRent(Integer vehicleId, Rent newRent, HttpServletRequest httpServletRequest) {
         Optional<User> username = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName());
         User user = userRepository.findByUsername(username.get().getUsername()).get();
         //check if user is allowed to rent with hos license;
         if (!dmvRepository.existsByDrivingLicence(user.getDrivingLicence())) {
-            System.out.println("can do the renting work without problem ");
-            long diff = newRent.getDateTimeTo().getTime() - newRent.getDateTimeFrom().getTime();
-            long datediff = diff / 1000 / 60 / 60 / 24;
-            long hrsdiff = diff / 1000 / 60 / 60;
-            double totalAmount;
-            if (username.get().isBlackListed() == false) {
-                if (datediff <= 14 && hrsdiff >= 5) {
-                    if (rentRepository.existsByVehicleVehicleId(vehicleId)) {
-                        Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
-                        List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
-                        totalAmount = vehicle.getAmount() * datediff;
-                        if (rentList.size() > 0) {
-                            return ResponseEntity.ok().body(new MessageResponse("Time slots are taken already. Please select another time slot"));
+            if(!insurerDBRepository.existsByDrivingLicence(user.getDrivingLicence())) {
+                System.out.println("can do the renting work without problem ");
+                long diff = newRent.getDateTimeTo().getTime() - newRent.getDateTimeFrom().getTime();
+                long datediff = diff / 1000 / 60 / 60 / 24;
+                long hrsdiff = diff / 1000 / 60 / 60;
+                double totalAmount;
+                if (username.get().isBlackListed() == false) {
+                    if (datediff <= 14 && hrsdiff >= 5) {
+                        if (rentRepository.existsByVehicleVehicleId(vehicleId)) {
+                            Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
+                            List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
+                            totalAmount = vehicle.getAmount() * datediff;
+                            if (rentList.size() > 0) {
+                                return ResponseEntity.ok().body(new MessageResponse("Time slots are taken already. Please select another time slot"));
+                            } else {
+                                return saveRent(newRent, username, vehicle, totalAmount);
+                            }
                         } else {
+                            Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
+                            totalAmount = vehicle.getAmount() * datediff;
                             return saveRent(newRent, username, vehicle, totalAmount);
                         }
                     } else {
-                        Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
-                        totalAmount = vehicle.getAmount() * datediff;
-                        return saveRent(newRent, username, vehicle, totalAmount);
+                        return ResponseEntity.ok().body(new MessageResponse("The vehicle can be rented minimum for 5 hrs and maximum for 14 days"));
                     }
                 } else {
-                    return ResponseEntity.ok().body(new MessageResponse("The vehicle can be rented minimum for 5 hrs and maximum for 14 days"));
+                    return ResponseEntity.ok().body(new MessageResponse("User is blacklisted"));
                 }
-            } else {
-                return ResponseEntity.ok().body(new MessageResponse("User is blacklisted"));
+            }else{
+                System.out.println("fraud license");
+                return ResponseEntity.badRequest().body(new MessageResponse("Sorry the user cannot perform rent"));
             }
         } else {
             System.out.println("have to send an email to DMV");
