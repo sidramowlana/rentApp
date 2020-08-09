@@ -43,8 +43,8 @@ public class EquipmentController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(value = "/delete/{equipmentId}")
-    public void deleteEquipmentById(@PathVariable Integer equipmentId){
-        equipmentService.deleteEquipmentById(equipmentId);
+    public ResponseEntity<?> deleteEquipmentById(@PathVariable Integer equipmentId){
+       return equipmentService.deleteEquipmentById(equipmentId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

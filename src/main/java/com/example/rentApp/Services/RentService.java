@@ -1,9 +1,6 @@
 package com.example.rentApp.Services;
-
-import com.example.rentApp.Integration.Models.DMV;
 import com.example.rentApp.Integration.Repository.DMVRepository;
 import com.example.rentApp.Integration.Repository.InsurerDBRepository;
-import com.example.rentApp.Integration.Service.DMVCallbackService;
 import com.example.rentApp.Integration.Service.DMVSchedulerService;
 import com.example.rentApp.Models.*;
 import com.example.rentApp.Repositories.*;
@@ -52,25 +49,23 @@ public class RentService {
     public ResponseEntity<?> addNewRent(Integer vehicleId, Rent newRent, HttpServletRequest httpServletRequest) {
         Optional<User> username = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName());
         User user = userRepository.findByUsername(username.get().getUsername()).get();
-        //check if user is allowed to rent with hos license;
-        if (!dmvRepository.existsByDrivingLicence(user.getDrivingLicence())) {
-            if(!insurerDBRepository.existsByDrivingLicence(user.getDrivingLicence())) {
-                System.out.println("can do the renting work without problem ");
+        if (!dmvRepository.existsByDrivingLicence(user.getDrivingLicence())) {        //check if user is allowed to rent with lost/stolen/suspended license;
+            if (!insurerDBRepository.existsByDrivingLicence(user.getDrivingLicence())) { //check if user is a fraud
                 long diff = newRent.getDateTimeTo().getTime() - newRent.getDateTimeFrom().getTime();
                 long datediff = diff / 1000 / 60 / 60 / 24;
                 long hrsdiff = diff / 1000 / 60 / 60;
                 double totalAmount;
-                if (username.get().isBlackListed() == false) {
+                if (username.get().isBlackListed() == false) { //check if user is blacklisted
                     if (datediff <= 14 && hrsdiff >= 5) {
                         if (rentRepository.existsByVehicleVehicleId(vehicleId)) {
-                            Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
-                            List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
-                            totalAmount = vehicle.getAmount() * datediff;
-                            if (rentList.size() > 0) {
-                                return ResponseEntity.ok().body(new MessageResponse("Time slots are taken already. Please select another time slot"));
-                            } else {
-                                return saveRent(newRent, username, vehicle, totalAmount);
-                            }
+                                Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
+                                List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
+                                totalAmount = vehicle.getAmount() * datediff;
+                                if (rentList.size() > 0) {
+                                    return ResponseEntity.ok().body(new MessageResponse("Time slots are taken already. Please select another time slot"));
+                                } else {
+                                    return saveRent(newRent, username, vehicle, totalAmount);
+                                }
                         } else {
                             Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
                             totalAmount = vehicle.getAmount() * datediff;
@@ -82,9 +77,9 @@ public class RentService {
                 } else {
                     return ResponseEntity.ok().body(new MessageResponse("User is blacklisted"));
                 }
-            }else{
+            } else {
                 System.out.println("fraud license");
-                return ResponseEntity.badRequest().body(new MessageResponse("Sorry the user cannot perform rent"));
+                return ResponseEntity.badRequest().body(new MessageResponse("User License number is not authorized to make booking"));
             }
         } else {
             System.out.println("have to send an email to DMV");
@@ -132,7 +127,7 @@ public class RentService {
         rent.getVehicle().setRented(true);
         rent.setVehicleRentEquipments(vehicleRentEquipmentList);
         rentRepository.save(rent);
-        return ResponseEntity.ok().body(new MessageResponse("booking confirmed"));
+            return ResponseEntity.ok().body(new MessageResponse("booking confirmed"));
     }
 
     public List<Rent> getAllRent(Integer userId) {
@@ -150,7 +145,7 @@ public class RentService {
         return newRentList;
     }
 
-    public ResponseEntity<?> extendRentByRentId(Integer rentId, Rent updateRent) {
+    public ResponseEntity<?> extendRentByRentId(Integer rentId) {
         //when extending check if the vehicle is booked in the extended date
         if (rentRepository.existsById(rentId)) {
             Rent rent = rentRepository.findById(rentId).get();
@@ -183,7 +178,7 @@ public class RentService {
         return ResponseEntity.ok().body(new MessageResponse("The booking time is extended successfully"));
     }
 
-    public ResponseEntity<?> isTakenRentByRentId(Integer rentId, Rent updateIsTakenRent) {
+    public ResponseEntity<?> isTakenRentByRentId(Integer rentId) {
         if (rentRepository.existsById(rentId)) {
             Rent rent = rentRepository.findById(rentId).get();
             rent.setTaken(true);
@@ -197,23 +192,34 @@ public class RentService {
         return rent;
     }
 
-    public void deleteRentByRentId(Integer rentId) {
-        if (vehicleRentEquipmentsRepository.existsById(rentId)) {
-            vehicleRentEquipmentsRepository.deleteById(rentId);
-            if (rentRepository.existsById(rentId)) {
-                rentRepository.deleteById(rentId);
-            }
-        }
-    }
-
     public ResponseEntity<?> updateBlackListUser(Integer rentId) {
         if (rentRepository.existsById(rentId)) {
             Rent rent = rentRepository.findById(rentId).get();
             User user = userRepository.findById(rent.getUser().getUserId()).get();
             user.setBlackListed(true);
             userRepository.save(user);
+            sendEmailToUserForCancellingRent(user, rent);
         }
         return ResponseEntity.ok().body(new MessageResponse("User is black listed"));
+    }
+
+    public void sendEmailToUserForCancellingRent(User user, Rent rent) {
+        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+        simpleMailMessage.setTo("sidra.sm18@gmail.com");
+        simpleMailMessage.setSubject("Invalid licences");
+        simpleMailMessage.setText("User registration number =" + user.getUserId() +
+                "\\n" + "Rent id = " + rent.getRentId() +
+                "\\n" + "Sorry we cancelled your booking due to failure of collecting it");
+        javaMailSender.send(simpleMailMessage);
+    }
+
+    public Rent cancelRentByRentId(Integer rentId) {
+        if (rentRepository.existsById(rentId)) {
+            Rent rent = rentRepository.findById(rentId).get();
+            rentRepository.save(rent);
+            return rent;
+        }
+        return null;
     }
 
     public void sendEmailToDMV(User user, String dateTime, String type) {
@@ -221,9 +227,9 @@ public class RentService {
         simpleMailMessage.setTo("sidra.sm18@gmail.com");
         simpleMailMessage.setSubject("Invalid licences");
         simpleMailMessage.setText("User registration number =" + user.getUserId() +
-                "\\n" + "User Driving license = " + user.getDrivingLicence() +
-                "\\n" + "Attempt date and time = " + dateTime +
-                "\\n" + " The license type = " + type);
+                 "\nUser Driving license = " + user.getDrivingLicence() +
+              "\nAttempt date and time = " + dateTime +
+                "\nThe license type = " + type);
         javaMailSender.send(simpleMailMessage);
     }
- }
+}

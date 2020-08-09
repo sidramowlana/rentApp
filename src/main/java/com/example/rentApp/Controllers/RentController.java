@@ -17,24 +17,15 @@ import java.util.List;
 @RestController
 public class RentController {
     private RentService rentService;
-private InsurerDBService insurerDBService;
 
     @Autowired
-    public RentController(RentService rentService, InsurerDBService insurerDBService) {
+    public RentController(RentService rentService) {
         this.rentService = rentService;
-        this.insurerDBService = insurerDBService;
-    }
-
-    @GetMapping(value = "/test/{userId}")
-    public boolean checkLicense(@PathVariable Integer userId)
-    {
-        return insurerDBService.checkLicenseFraud(userId);
     }
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @PostMapping(value = "/createRent/{vehicleId}")
-    public ResponseEntity<?> addRent(@PathVariable Integer vehicleId, @RequestBody Rent newRent, HttpServletRequest httpServletRequest)
-    {
+    public ResponseEntity<?> addRent(@PathVariable Integer vehicleId, @RequestBody Rent newRent, HttpServletRequest httpServletRequest) {
         return rentService.addNewRent(vehicleId, newRent, httpServletRequest);
     }
 
@@ -52,14 +43,14 @@ private InsurerDBService insurerDBService;
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/extendRent/{rentId}", method = RequestMethod.PUT)
-    public ResponseEntity<?> extendRentByRentId(@PathVariable Integer rentId, @RequestBody Rent rent) {
-        return rentService.extendRentByRentId(rentId, rent);
+    public ResponseEntity<?> extendRentByRentId(@PathVariable Integer rentId) {
+        return rentService.extendRentByRentId(rentId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @RequestMapping(value = "/rentIsTaken/{rentId}", method = RequestMethod.PUT)
-    public ResponseEntity<?> updateIsTakenRentByRentId(@PathVariable Integer rentId, @RequestBody Rent rent) {
-        return rentService.isTakenRentByRentId(rentId, rent);
+    public ResponseEntity<?> updateIsTakenRentByRentId(@PathVariable Integer rentId) {
+        return rentService.isTakenRentByRentId(rentId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -69,9 +60,9 @@ private InsurerDBService insurerDBService;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping(value = "/deleteRent/{rentId}")
-    public void deleteRentByRentId(@PathVariable Integer rentId) {
-        rentService.deleteRentByRentId(rentId);
+    @PutMapping(value = "/cancelRent/{rentId}")
+    public Rent deleteRentByRentId(@PathVariable Integer rentId) {
+        return rentService.cancelRentByRentId(rentId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

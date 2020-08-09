@@ -21,8 +21,4 @@ public class VehicleType {
         this.name = name;
     }
 
-    public VehicleType(Integer vehicleTypeId, String name) {
-        this.vehicleTypeId = vehicleTypeId;
-        this.name = name;
-    }
 }

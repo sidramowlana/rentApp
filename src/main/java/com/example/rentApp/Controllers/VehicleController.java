@@ -46,8 +46,8 @@ public class VehicleController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(value = "/delete/{vehicleId}")
-    public void deleteVehicleById(@PathVariable Integer vehicleId){
-        vehicleService.deleteVehicleById(vehicleId);
+    public ResponseEntity<?> deleteVehicleById(@PathVariable Integer vehicleId){
+        return vehicleService.deleteVehicleById(vehicleId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

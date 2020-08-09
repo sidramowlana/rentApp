@@ -1,8 +1,5 @@
 package com.example.rentApp.Services;
 
-import com.example.rentApp.Models.Role;
-import com.example.rentApp.Models.User;
-import com.example.rentApp.Models.Vehicle;
 import com.example.rentApp.Models.VehicleType;
 import com.example.rentApp.Repositories.VehicleTypeRepository;
 import com.example.rentApp.Response.MessageResponse;
@@ -36,20 +33,10 @@ public class VehicleTypeService {
         return vehicleTypeRepository.findAll();
     }
 
-    public ResponseEntity<?> getVehicleTypeByName(String name) {
-        if (vehicleTypeRepository.existsByName(name)) {
-            VehicleType vehicleType = vehicleTypeRepository.findByName(name);
-            return ResponseEntity.ok(vehicleType);
-        }
-        return ResponseEntity.badRequest().body(new MessageResponse("Vehicle Type not found!!!"));
-    }
     public VehicleType getByVehicleTypeName(String name){
            return vehicleTypeRepository.findByName(name);
     }
-    public VehicleType getByVehicleType(VehicleType vehicleType){
-        vehicleTypeRepository.existsByName(vehicleType.getName());
-        return vehicleType;
-    }
+
     public ResponseEntity<?> getVehicleTypeId(Integer typeId) {
         if (vehicleTypeRepository.existsById(typeId)) {
             VehicleType vehicleType = vehicleTypeRepository.findById(typeId).get();

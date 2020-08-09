@@ -22,16 +22,8 @@ public class PasswordResetToken {
 
     @Column(nullable = false)
     private Date expiryDate;
-    long resetExpiry;
 
     public PasswordResetToken() {
-    }
-
-    public PasswordResetToken(long id, String token, User user, Date expiryDate) {
-        this.id = id;
-        this.token = token;
-        this.user = user;
-        this.expiryDate = expiryDate;
     }
 
     public Date setExpiryDate(int minutes) {

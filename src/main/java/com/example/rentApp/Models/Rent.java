@@ -19,12 +19,11 @@ public class Rent {
     private Date dateTimeFrom;
     private Date dateTimeTo;
     private Date currentDateTime;
-    private boolean vehicleIsRented;
+//    private boolean vehicleIsRented;
     private boolean isRentExtended;
     private double totalRentalAmount;
     private boolean isTaken;
 
-    //    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "user", referencedColumnName = "userId")
     private User user;
@@ -50,10 +49,4 @@ public class Rent {
     private String drivingLicenceImagefile;
     @Transient
     String utilityBillImagefile;
-
-    public Rent(Date dateTimeFrom, Date dateTimeTo, Date currentDateTime) {
-        this.dateTimeFrom = dateTimeFrom;
-        this.dateTimeTo = dateTimeTo;
-        this.currentDateTime = currentDateTime;
-    }
 }

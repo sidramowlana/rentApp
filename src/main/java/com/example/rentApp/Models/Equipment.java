@@ -24,7 +24,7 @@ public class Equipment {
     private String description;
     @Column(columnDefinition = "text")
     private String imageUrl;
-    private boolean isBooked;
+//    private boolean isBooked;
 
     public Equipment(String equipmentName, Integer amount, String description, String imageUrl) {
         this.equipmentName = equipmentName;

@@ -27,7 +27,6 @@ public class DMVSchedulerService implements ResponseCallback {
     }
 
     @Scheduled(cron = "0 1 0 * * * ")
-//    @Scheduled(cron = "*/30 * * * * *")
     public void getDMVLicenseList() {
         dmvCallbackService.getAllLicense(this);
     }

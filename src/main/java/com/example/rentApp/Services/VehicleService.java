@@ -1,10 +1,9 @@
 package com.example.rentApp.Services;
 
-import com.example.rentApp.Models.Equipment;
 import com.example.rentApp.Models.Vehicle;
 import com.example.rentApp.Models.VehicleType;
+import com.example.rentApp.Repositories.RentRepository;
 import com.example.rentApp.Repositories.VehicleRepository;
-import com.example.rentApp.Repositories.VehicleTypeRepository;
 import com.example.rentApp.Response.MessageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,27 +15,19 @@ import java.util.List;
 public class VehicleService {
 
     private VehicleRepository vehicleRepository;
-    private VehicleTypeRepository vehicleTypeRepository;
     private VehicleTypeService vehicleTypeService;
+    private RentRepository rentRepository;
+
 
     @Autowired
-    public VehicleService(VehicleRepository vehicleRepository, VehicleTypeService vehicleTypeService, VehicleTypeRepository vehicleTypeRepository) {
+    public VehicleService(VehicleRepository vehicleRepository, VehicleTypeService vehicleTypeService, RentRepository rentRepository) {
         this.vehicleRepository = vehicleRepository;
         this.vehicleTypeService = vehicleTypeService;
-        this.vehicleTypeRepository = vehicleTypeRepository;
+        this.rentRepository = rentRepository;
     }
 
 
     //  get equipment by name;
-    public ResponseEntity<?> getVehicleByName(String name) {
-        if (!vehicleRepository.existsByVehicleName(name)) {
-            return ResponseEntity.ok().body(new MessageResponse("Vehicle not available!!!"));
-        } else {
-            Vehicle vehicle = vehicleRepository.findByVehicleName(name);
-            return ResponseEntity.ok().body(vehicle);
-        }
-    }
-
     public ResponseEntity<?> getVehicleById(Integer typeId) {
         if (vehicleRepository.existsById(typeId)) {
             Vehicle vehicle = vehicleRepository.findById(typeId).get();
@@ -50,9 +41,6 @@ public class VehicleService {
     }
 
     public ResponseEntity<?> addNewVehicle(Vehicle newVehicle) {
-//        if (vehicleRepository.existsByVehicleName(newVehicle.getVehicleName())) {
-//            return ResponseEntity.badRequest().body(new MessageResponse("Vehicle already exist!!!"));
-//        }
         VehicleType vehicleType = vehicleTypeService.getByVehicleTypeName(newVehicle.getVehicleType().getName());
         Vehicle vehicle = new Vehicle();
         vehicle.setVehicleName(newVehicle.getVehicleName());
@@ -87,28 +75,17 @@ public class VehicleService {
 
     }
 
-    public void deleteVehicleByName(String name) {
-        if (vehicleRepository.existsByVehicleName(name)) {
-            vehicleRepository.deleteByVehicleName(name);
-        }
-    }
-
-    public void deleteVehicleById(Integer vehicleId) {
+    public ResponseEntity<?> deleteVehicleById(Integer vehicleId) {
         if (vehicleRepository.existsById(vehicleId)) {
-            vehicleRepository.deleteById(vehicleId);
-            new MessageResponse("Vehicle deleted succeffully");
+            if(rentRepository.existsByVehicleVehicleId(vehicleId)){
+                return ResponseEntity.badRequest().body(new MessageResponse("Vehicle is been booked by your customer"));
+            }else {
+                vehicleRepository.deleteById(vehicleId);
+                return ResponseEntity.ok().body(new MessageResponse("Vehicle deleted succeffully"));
+            }
         } else {
-            new MessageResponse("Vehicle Id not available");
+            return ResponseEntity.badRequest().body(new MessageResponse("Vehicle Id not available"));
         }
     }
-
-    public ResponseEntity<?> getAllVehiclesByVehicleType(String vehicleType) {
-        if (vehicleRepository.existsByVehicleTypeName(vehicleType)) {
-            Vehicle vehicle = vehicleRepository.findByVehicleTypeName(vehicleType);
-            return ResponseEntity.ok(vehicle);
-        }
-        return ResponseEntity.badRequest().body(new MessageResponse("No vehicles found in this type!!!"));
-    }
-
 
 }

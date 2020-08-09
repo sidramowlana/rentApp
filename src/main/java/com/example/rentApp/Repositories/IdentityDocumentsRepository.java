@@ -7,11 +7,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface IdentityDocumentsRepository extends JpaRepository<IdentityDocuments, Integer> {
-    IdentityDocuments findByDrivingLicenceImage(String drivingLicenceImage);
-
-    IdentityDocuments findByUtilityBillImage(String utilityBillImage);
-
-    Boolean existsByDrivingLicenceImage(String drivingLicenceImage);
-
-    Boolean existsByUtilityBillImage(String utilityBillImage);
-}
+   }

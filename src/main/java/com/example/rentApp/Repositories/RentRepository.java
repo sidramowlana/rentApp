@@ -12,7 +12,7 @@ import java.util.List;
 public interface RentRepository extends JpaRepository<Rent, Integer> {
     List<Rent> findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(Vehicle vehicle, Date dateTimeTo, Date dateTimeFrom);
 
-    Boolean existsByVehicleVehicleId(Integer vehicleId);
+    boolean existsByVehicleVehicleId(Integer vehicleId);
 
     List<Rent> findByUserUserId(Integer userId);
 

@@ -9,5 +9,5 @@ public interface VehicleTypeRepository extends JpaRepository<VehicleType, Intege
 
     VehicleType findByName(String name);
     void deleteByName(String name);
-    Boolean existsByName(String name);
+    boolean existsByName(String name);
 }

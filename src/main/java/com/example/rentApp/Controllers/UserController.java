@@ -44,7 +44,6 @@ public class UserController {
 //    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/updatePassword/{userNameToken}", method = RequestMethod.PUT)
     public ResponseEntity<?> updateNewPassword(@PathVariable String userNameToken, @RequestBody String newPassword, HttpServletRequest request) {
-        System.out.println("called1");
         return userService.updateNewPassword(userNameToken, newPassword,request);
     }
 

@@ -1,7 +1,6 @@
 package com.example.rentApp.Services;
 
 import com.example.rentApp.Models.PasswordResetToken;
-import com.example.rentApp.Models.Role;
 import com.example.rentApp.Models.User;
 import com.example.rentApp.Repositories.PasswordResetTokenRepository;
 import com.example.rentApp.Repositories.UserRepository;
@@ -26,7 +25,6 @@ import java.util.Optional;
 public class UserService {
 
     private UserRepository userRepository;
-    private  RoleService roleService;
     private PasswordEncoder passwordEncoder;
     private JavaMailSender javaMailSender;
     private PasswordResetTokenRepository passwordResetTokenRepository;
@@ -37,10 +35,9 @@ public class UserService {
     private int jwtExpirationMs;
 
     @Autowired
-    public UserService(UserRepository userRepository, RoleService roleService,PasswordEncoder passwordEncoder,
+    public UserService(UserRepository userRepository,PasswordEncoder passwordEncoder,
                        JavaMailSender javaMailSender, PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
-        this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
         this.javaMailSender = javaMailSender;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
@@ -60,22 +57,6 @@ public class UserService {
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
-    }
-
-    public ResponseEntity<?> getUserByEmail(String email) {
-        if (userRepository.existsByEmail(email)) {
-            User user = userRepository.findByEmail(email);
-            return ResponseEntity.ok(user);
-        }
-        return ResponseEntity.badRequest().body(new MessageResponse("User email not available!!!"));
-    }
-
-    public ResponseEntity<?> getUserByDrivingLicenceId(String drivingLicenceId) {
-        if (userRepository.existsByDrivingLicence(drivingLicenceId)) {
-            User user = userRepository.findByDrivingLicence(drivingLicenceId);
-            return ResponseEntity.ok(user);
-        }
-        return ResponseEntity.badRequest().body(new MessageResponse("Driving License No not available!!!"));
     }
 
     public String generateJwtToken(String username) {
