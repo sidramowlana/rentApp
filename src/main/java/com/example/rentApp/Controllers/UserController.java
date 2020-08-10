@@ -35,6 +35,11 @@ public class UserController {
     public ResponseEntity<?> getAUser(@PathVariable Integer userId) {
         return userService.getUserByUserId(userId);
     }
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    @PostMapping(value = "/contact")
+    public ResponseEntity<?> contactUsSendEmail(@RequestBody String text, HttpServletRequest request) {
+        return userService.contactUsSendEmail(text,request);
+    }
 
     @PostMapping(value = "/forgotPassword")
         public ResponseEntity<?> forgotPasswordByEmail(@Valid @RequestBody String userEmail, HttpServletRequest request) {

@@ -142,6 +142,19 @@ public class UserService {
         }
         return ResponseEntity.ok(new MessageResponse("User Successfully Updated"));
     }
+
+    public ResponseEntity<?> contactUsSendEmail(String text,HttpServletRequest request)
+    {
+        String username = request.getUserPrincipal().getName();
+        User user = userRepository.findByUsername(username).get();
+        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+        simpleMailMessage.setFrom(user.getEmail());
+        simpleMailMessage.setTo("sidra.sm18@gmail.com");
+        simpleMailMessage.setSubject("User Inquires");
+        simpleMailMessage.setText(text);
+        javaMailSender.send(simpleMailMessage);
+        return ResponseEntity.ok().body(new MessageResponse("Email Sent successfully will reply to you soon!!!"));
+    }
 }
 
 

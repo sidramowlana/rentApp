@@ -1,4 +1,5 @@
 package com.example.rentApp.Services;
+
 import com.example.rentApp.Integration.Repository.DMVRepository;
 import com.example.rentApp.Integration.Repository.InsurerDBRepository;
 import com.example.rentApp.Integration.Service.DMVSchedulerService;
@@ -55,9 +56,12 @@ public class RentService {
                 long datediff = diff / 1000 / 60 / 60 / 24;
                 long hrsdiff = diff / 1000 / 60 / 60;
                 double totalAmount;
-                if (username.get().isBlackListed() == false) { //check if user is blacklisted
+                if (!username.get().isBlackListed()) { //check if user is blacklisted
                     if (datediff <= 14 && hrsdiff >= 5) {
                         if (rentRepository.existsByVehicleVehicleId(vehicleId)) {
+                            List<Rent> rentsList = rentRepository.findByVehicleVehicleId(vehicleId);
+                            System.out.println(checkRentStatus(rentsList));
+                            if (!checkRentStatus(rentsList)) {
                                 Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
                                 List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
                                 totalAmount = vehicle.getAmount() * datediff;
@@ -66,6 +70,11 @@ public class RentService {
                                 } else {
                                     return saveRent(newRent, username, vehicle, totalAmount);
                                 }
+                            } else {
+                                Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
+                                totalAmount = vehicle.getAmount() * datediff;
+                                return saveRent(newRent, username, vehicle, totalAmount);
+                            }
                         } else {
                             Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
                             totalAmount = vehicle.getAmount() * datediff;
@@ -87,6 +96,7 @@ public class RentService {
             sendEmailToDMV(user, date.toString(), dmvSchedulerService.getType(user));
             return ResponseEntity.badRequest().body(new MessageResponse("Cannot allow the user with license " + user.getDrivingLicence() + " to rent"));
         }
+
     }
 
     public ResponseEntity<?> saveRent(Rent newRent, Optional<User> username, Vehicle vehicle, Double total) {
@@ -97,6 +107,7 @@ public class RentService {
         rent.setCurrentDateTime(currentDate);
         rent.setDateTimeFrom(newRent.getDateTimeFrom());
         rent.setDateTimeTo(newRent.getDateTimeTo());
+        rent.setStatus("Confirmed");
         rent.setUser(username.get());
         rent.setVehicle(vehicle);
         rent.setTotalRentalAmount(total);
@@ -123,11 +134,10 @@ public class RentService {
                 }
             }
         }
-        rent.setRentExtended(false);
         rent.getVehicle().setRented(true);
         rent.setVehicleRentEquipments(vehicleRentEquipmentList);
         rentRepository.save(rent);
-            return ResponseEntity.ok().body(new MessageResponse("booking confirmed"));
+        return ResponseEntity.ok().body(new MessageResponse("booking confirmed"));
     }
 
     public List<Rent> getAllRent(Integer userId) {
@@ -143,48 +153,6 @@ public class RentService {
     public List<Rent> getAllBlackListUserRents() {
         List<Rent> newRentList = rentRepository.findAllByUserIsBlackListed(true);
         return newRentList;
-    }
-
-    public ResponseEntity<?> extendRentByRentId(Integer rentId) {
-        //when extending check if the vehicle is booked in the extended date
-        if (rentRepository.existsById(rentId)) {
-            Rent rent = rentRepository.findById(rentId).get();
-            if (vehicleRentEquipmentsRepository.existsByRent(rent)) {
-                VehicleRentEquipments vehicleRentEquipment = vehicleRentEquipmentsRepository.findByRent(rent);
-                Date dateTimeTo = rent.getDateTimeTo();
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(dateTimeTo);
-                calendar.set(Calendar.HOUR_OF_DAY, 40); //24 hours + 1 hours to be 4 pm
-                calendar.set(Calendar.MINUTE, 0);
-                calendar.set(Calendar.SECOND, 0);
-                Date newDateTime = calendar.getTime();
-                rent.setDateTimeTo(newDateTime);
-                rent.setRentExtended(true);
-                vehicleRentEquipment.setEndDate(newDateTime);
-                vehicleRentEquipmentsRepository.save(vehicleRentEquipment);
-            } else {
-                Date dateTimeTo = rent.getDateTimeTo();
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(dateTimeTo);
-                calendar.set(Calendar.HOUR_OF_DAY, 38); //24 hours + 1 hours to be 4 pm
-                calendar.set(Calendar.MINUTE, 0);
-                calendar.set(Calendar.SECOND, 0);
-                Date newDateTime = calendar.getTime();
-                rent.setDateTimeTo(newDateTime);
-                rent.setRentExtended(true);
-            }
-            rentRepository.save(rent);
-        }
-        return ResponseEntity.ok().body(new MessageResponse("The booking time is extended successfully"));
-    }
-
-    public ResponseEntity<?> isTakenRentByRentId(Integer rentId) {
-        if (rentRepository.existsById(rentId)) {
-            Rent rent = rentRepository.findById(rentId).get();
-            rent.setTaken(true);
-            rentRepository.save(rent);
-        }
-        return ResponseEntity.ok().body(new MessageResponse("Updated"));
     }
 
     public Rent getAllRentById(Integer rentId) {
@@ -213,23 +181,78 @@ public class RentService {
         javaMailSender.send(simpleMailMessage);
     }
 
-    public Rent cancelRentByRentId(Integer rentId) {
-        if (rentRepository.existsById(rentId)) {
-            Rent rent = rentRepository.findById(rentId).get();
-            rentRepository.save(rent);
-            return rent;
-        }
-        return null;
-    }
-
     public void sendEmailToDMV(User user, String dateTime, String type) {
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
         simpleMailMessage.setTo("sidra.sm18@gmail.com");
         simpleMailMessage.setSubject("Invalid licences");
         simpleMailMessage.setText("User registration number =" + user.getUserId() +
-                 "\nUser Driving license = " + user.getDrivingLicence() +
-              "\nAttempt date and time = " + dateTime +
+                "\nUser Driving license = " + user.getDrivingLicence() +
+                "\nAttempt date and time = " + dateTime +
                 "\nThe license type = " + type);
         javaMailSender.send(simpleMailMessage);
     }
+
+    public ResponseEntity<?> updateStatusRentId(Integer rentId, String status) {
+        if (rentRepository.existsById(rentId)) {
+            Rent rent = rentRepository.findById(rentId).get();
+            if (status.equals("Extended")) {
+                if (vehicleRentEquipmentsRepository.existsByRent(rent)) {
+                    VehicleRentEquipments vehicleRentEquipment = vehicleRentEquipmentsRepository.findByRent(rent);
+                    Date dateTimeTo = rent.getDateTimeTo();
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(dateTimeTo);
+                    calendar.set(Calendar.HOUR_OF_DAY, 40); //24 hours + 1 hours to be 4 pm
+                    calendar.set(Calendar.MINUTE, 0);
+                    calendar.set(Calendar.SECOND, 0);
+                    Date newDateTime = calendar.getTime();
+                    rent.setDateTimeTo(newDateTime);
+                    rent.setStatus(status);
+                    vehicleRentEquipment.setEndDate(newDateTime);
+                    vehicleRentEquipmentsRepository.save(vehicleRentEquipment);
+                    rentRepository.save(rent);
+                    return ResponseEntity.ok().body(rent);
+
+
+                } else {
+                    Date dateTimeTo = rent.getDateTimeTo();
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(dateTimeTo);
+                    calendar.set(Calendar.HOUR_OF_DAY, 38); //24 hours + 1 hours to be 4 pm
+                    calendar.set(Calendar.MINUTE, 0);
+                    calendar.set(Calendar.SECOND, 0);
+                    Date newDateTime = calendar.getTime();
+                    rent.setDateTimeTo(newDateTime);
+                    rent.setStatus(status);
+                    rentRepository.save(rent);
+                    return ResponseEntity.ok().body(rent);
+
+                }
+            } else if (status.equals("Cancelled")) {
+                rent.setStatus(status);
+                rentRepository.save(rent);
+                return ResponseEntity.ok().body(rent);
+
+            } else if (status.equals("Taken")) {
+                rent.setStatus(status);
+                rentRepository.save(rent);
+                return ResponseEntity.ok().body(rent);
+            }
+        } else {
+            return ResponseEntity.badRequest().body(new MessageResponse("Something went wrong in backend"));
+        }
+        return null;
+    }
+
+    public boolean checkRentStatus(List<Rent> rentsList) {
+        boolean result = false;
+        for (Rent rent : rentsList) {
+            if (rent.getStatus().equals("Cancelled")) {
+                result = true;
+            } else {
+                result = false;
+            }
+        }
+        return result;
+    }
+
 }

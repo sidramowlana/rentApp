@@ -1,6 +1,5 @@
 package com.example.rentApp.Models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -19,10 +18,8 @@ public class Rent {
     private Date dateTimeFrom;
     private Date dateTimeTo;
     private Date currentDateTime;
-//    private boolean vehicleIsRented;
-    private boolean isRentExtended;
+    private String status;
     private double totalRentalAmount;
-    private boolean isTaken;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "user", referencedColumnName = "userId")
@@ -33,7 +30,7 @@ public class Rent {
     @JoinColumn(nullable = false, name = "identity_documents_id")
     private IdentityDocuments identityDocuments;
 
-    @OneToOne(targetEntity = Vehicle.class, fetch = FetchType.EAGER)
+    @OneToOne(targetEntity = Vehicle.class, fetch = FetchType.EAGER,cascade = CascadeType.PERSIST)
     @JoinColumn(nullable = false, name = "vehicle")
     private Vehicle vehicle;
 

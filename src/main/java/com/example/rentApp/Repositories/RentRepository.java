@@ -16,5 +16,7 @@ public interface RentRepository extends JpaRepository<Rent, Integer> {
 
     List<Rent> findByUserUserId(Integer userId);
 
+    List<Rent> findByVehicleVehicleId(Integer vehicleId);
+
     List<Rent> findAllByUserIsBlackListed(boolean isBlackList);
 }

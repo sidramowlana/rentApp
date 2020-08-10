@@ -41,28 +41,10 @@ public class RentController {
         return rentService.getAllRentById(rentId);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value = "/extendRent/{rentId}", method = RequestMethod.PUT)
-    public ResponseEntity<?> extendRentByRentId(@PathVariable Integer rentId) {
-        return rentService.extendRentByRentId(rentId);
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @RequestMapping(value = "/rentIsTaken/{rentId}", method = RequestMethod.PUT)
-    public ResponseEntity<?> updateIsTakenRentByRentId(@PathVariable Integer rentId) {
-        return rentService.isTakenRentByRentId(rentId);
-    }
-
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/allNotBlacklist")
     public List<Rent> getAllNotBlackListUserRents() {
         return rentService.getAllNotBlackListUserRents();
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping(value = "/cancelRent/{rentId}")
-    public Rent deleteRentByRentId(@PathVariable Integer rentId) {
-        return rentService.cancelRentByRentId(rentId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -77,4 +59,9 @@ public class RentController {
         return rentService.getAllBlackListUserRents();
     }
 
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value = "/updateStatus/{rentId}", method = RequestMethod.PUT)
+    public ResponseEntity<?> onUpdateStatusRentId(@PathVariable Integer rentId,@RequestBody String status) {
+        return rentService.updateStatusRentId(rentId,status);
+    }
 }
