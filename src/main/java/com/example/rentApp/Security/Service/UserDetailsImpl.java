@@ -32,7 +32,6 @@ public class UserDetailsImpl implements UserDetails {
                 user.getUsername(),
                 user.getPassword(),
                 authorities);
-
     }
 
     @Override

@@ -63,7 +63,8 @@ public class RentService {
                             System.out.println(checkRentStatus(rentsList));
                             if (!checkRentStatus(rentsList)) {
                                 Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
-                                List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual(vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
+                                List<Rent> rentList = rentRepository.findByVehicleAndDateTimeFromLessThanEqualAndDateTimeToGreaterThanEqual
+                                        (vehicle, newRent.getDateTimeTo(), newRent.getDateTimeFrom());
                                 totalAmount = vehicle.getAmount() * datediff;
                                 if (rentList.size() > 0) {
                                     return ResponseEntity.ok().body(new MessageResponse("Time slots are taken already. Please select another time slot"));
@@ -125,7 +126,8 @@ public class RentService {
                 vehicleRentEquipment.setStartDate(newRent.getDateTimeFrom());
                 vehicleRentEquipment.setEndDate(newRent.getDateTimeTo());
                 vehicleRentEquipmentList.add(vehicleRentEquipment);
-                List<VehicleRentEquipments> equipmentList = vehicleRentEquipmentsRepository.findByEquipmentAndStartDateLessThanEqualAndEndDateGreaterThanEqual(equipment, vehicleRentEquipment.getEndDate(), vehicleRentEquipment.getStartDate());
+                List<VehicleRentEquipments> equipmentList = vehicleRentEquipmentsRepository.findByEquipmentAndStartDateLessThanEqualAndEndDateGreaterThanEqual
+                        (equipment, vehicleRentEquipment.getEndDate(), vehicleRentEquipment.getStartDate());
                 if (equipmentList.size() > 0) {
                     return ResponseEntity.ok().body(new MessageResponse("The equipments are already booked in the selected time slot"));
                 } else {
